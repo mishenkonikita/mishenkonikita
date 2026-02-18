@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мини-игры</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f4;
+    text-align: center;
+}
+
+nav {
+    background: #333;
+    padding: 15px;
+}
+
+nav button {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+nav button:hover {
+    background: #666;
+}
+
+.dropdown {
+    display: none;
+    background: #222;
+    padding: 10px;
+}
+
+.dropdown button {
+    display: block;
+    margin: 5px auto;
+    width: 200px;
+}
+
+.game {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.active {
+    display: block;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+input {
+    padding: 8px;
+}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+    <nav>
+        <a href="index.html" target="_blank">Главная</a>
+        <a href="skills.html" target="_blank">Навыки</a>
+        <a href="education.html" target="_blank">Образование</a>
+        <a href="achievements.html" target="_blank">Достижения</a>
+        <a href="projects.html" target="_blank">Проекты</a>
+        <a href="contacts.html" target="_blank">Контакты</a>
+        <a href="практика2.html" target="_blank">Мини-игры</a>
+    </nav>
+</header>
+
+<nav>
+    <button id="miniGamesBtn">Мини-игры ▼</button>
+    <div class="dropdown" id="dropdown">
+        <button onclick="showGame('clicker')">Кликер</button>
+        <button onclick="showGame('adventure')">Генератор приключений</button>
+        <button onclick="showGame('guess')">Угадай число</button>
+    </div>
+</nav>
+
+<!-- Кликер -->
+<div id="clicker" class="game">
+    <h2>🕹 Кликер</h2>
+    <p>Очки: <span id="score">0</span></p>
+    <p>Время: <span id="time">30</span> сек</p>
+    <p>Рекорд: <span id="record">0</span></p>
+    <button id="clickBtn">Клик!</button>
+    <button id="resetBtn">Сбросить</button>
+    <p id="result"></p>
+</div>
+
+<!-- Генератор приключений -->
+<div id="adventure" class="game">
+    <h2>🗺 Генератор приключений</h2>
+    <button id="generateBtn">Сгенерировать</button>
+    <div id="story"></div>
+    <h3>История приключений:</h3>
+    <ul id="history"></ul>
+</div>
+
+<!-- Угадай число -->
+<div id="guess" class="game">
+    <h2>🔢 Угадай число</h2>
+    <p>Введите число от 1 до 100</p>
+    <input type="number" id="guessInput" min="1" max="100">
+    <button id="guessBtn">Проверить</button>
+    <button id="restartBtn">Начать заново</button>
+    <p id="guessMessage"></p>
+    <p>Осталось попыток: <span id="attempts">10</span></p>
+</div>
+
+<script>
+// ---------------- НАВИГАЦИЯ ----------------
+const miniBtn = document.getElementById("miniGamesBtn");
+const dropdown = document.getElementById("dropdown");
+
+miniBtn.addEventListener("click", () => {
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+});
+
+function showGame(id) {
+    document.querySelectorAll(".game").forEach(g => g.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+// ---------------- КЛИКЕР ----------------
+let score = 0;
+let timeLeft = 30;
+let timer;
+let record = localStorage.getItem("record") || 0;
+document.getElementById("record").textContent = record;
+
+const clickBtn = document.getElementById("clickBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+clickBtn.addEventListener("click", () => {
+    if (timeLeft > 0) {
+        score++;
+        document.getElementById("score").textContent = score;
+        clickBtn.style.background = "#" + Math.floor(Math.random()*16777215).toString(16);
+    }
+});
+
+function startTimer() {
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("time").textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            document.getElementById("result").textContent = "Игра окончена! Ваш результат: " + score;
+            if (score > record) {
+                localStorage.setItem("record", score);
+            }
+        }
+    }, 1000);
+}
+startTimer();
+
+resetBtn.addEventListener("click", () => {
+    score = 0;
+    timeLeft = 30;
+    document.getElementById("score").textContent = score;
+    document.getElementById("time").textContent = timeLeft;
+    document.getElementById("result").textContent = "";
+    clearInterval(timer);
+    startTimer();
+});
+
+// ---------------- ГЕНЕРАТОР ПРИКЛЮЧЕНИЙ ----------------
+const characters = ["рыцарь", "маг", "вор"];
+const locations = ["тёмном лесу", "заброшенном замке", "подводном царстве"];
+const villains = ["драконом", "колдуном", "гоблином"];
+
+const generateBtn = document.getElementById("generateBtn");
+const storyDiv = document.getElementById("story");
+const historyList = document.getElementById("history");
+
+let history = JSON.parse(localStorage.getItem("stories")) || [];
+renderHistory();
+
+generateBtn.addEventListener("click", () => {
+    const character = characters[Math.floor(Math.random()*characters.length)];
+    const location = locations[Math.floor(Math.random()*locations.length)];
+    const villain = villains[Math.floor(Math.random()*villains.length)];
+
+    const text = `Ваш персонаж — ${character} находится в ${location} и сражается с ${villain}.`;
+
+    storyDiv.textContent = text;
+    history.push(text);
+    localStorage.setItem("stories", JSON.stringify(history));
+    renderHistory();
+});
+
+function renderHistory() {
+    historyList.innerHTML = "";
+    history.forEach(story => {
+        const li = document.createElement("li");
+        li.textContent = story;
+        historyList.appendChild(li);
+    });
+}
+
+// ---------------- УГАДАЙ ЧИСЛО ----------------
+let randomNumber;
+let attempts = 10;
+
+function startGuessGame() {
+    randomNumber = Math.floor(Math.random()*100) + 1;
+    attempts = 10;
+    document.getElementById("attempts").textContent = attempts;
+    document.getElementById("guessMessage").textContent = "";
+}
+startGuessGame();
+
+document.getElementById("guessBtn").addEventListener("click", () => {
+    const guess = parseInt(document.getElementById("guessInput").value);
+    if (!guess || guess < 1 || guess > 100) {
+        document.getElementById("guessMessage").textContent = "Введите корректное число!";
+        return;
+    }
+
+    attempts--;
+    document.getElementById("attempts").textContent = attempts;
+
+    if (guess === randomNumber) {
+        document.getElementById("guessMessage").textContent = "Поздравляем! Вы угадали!";
+    } else if (attempts <= 0) {
+        document.getElementById("guessMessage").textContent = "Вы проиграли! Число было: " + randomNumber;
+    } else if (guess < randomNumber) {
+        document.getElementById("guessMessage").textContent = "Загаданное число больше.";
+    } else {
+        document.getElementById("guessMessage").textContent = "Загаданное число меньше.";
+    }
+});
+
+document.getElementById("restartBtn").addEventListener("click", startGuessGame);
+</script>
+
+</body>
+</html>
